@@ -1,0 +1,51 @@
+<h3>Classifier Validation Report for {{ classifier }}</h3>
+<h5>{{ time | date:"Y-m-d h:m:s" }}</h5>
+<h4>Cross Validation Metrics</h4>
+<table class="table">
+    <colgroup span="2"></colgroup>
+    <colgroup span="2"></colgroup>
+    <colgroup span="2"></colgroup>
+    <colgroup span="2"></colgroup>
+    <colgroup span="2"></colgroup>
+    <colgroup span="2"></colgroup>
+    <tr>
+        <th colspan="2" scope="colgroup">Fit Time (s)</th>
+        <th colspan="2" scope="colgroup">Score Time (s)</th>
+        <th colspan="2" scope="colgroup">Test Accuracy (%)</th>
+        <th colspan="2" scope="colgroup">Test f1 Macro Averaged (%)</th>
+        <th colspan="2" scope="colgroup">Test Precision Macro Averaged (%)</th>
+        <th colspan="2" scope="colgroup">Test Recall Macro Averaged (%)</th>
+    </tr>
+    <tr>
+        {% with ''|center:6 as range %}
+            {% for _ in range %}
+                <th>mean</th>
+                <th>std</th>
+            {% endfor %}
+        {% endwith %}
+    </tr>
+    <tr>
+        {% for tuple in scores.values %}
+            {% for item in tuple %}
+                <td>{{ item|floatformat:2 }}</td>
+            {% endfor %}
+        {% endfor %}
+    </tr>
+</table>
+<h4>One-Vs-Rest Sensibility and Sensitivity</h4>
+<table class="table">
+    <tr>
+        <th>class</th>
+        <th>sensibility (%)</th>
+        <th>specificity (%)</th>
+    </tr>
+    {% for class, info in sens_spec.items %}
+        <tr>
+            <th>class {{ class }}</th>
+            <td>{{ info.sens|floatformat:2 }}</td>
+            <td>{{ info.spec|floatformat:2 }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<h4>Confusion Matrix</h4>
+<img src="data:image/png;base64,{{ conf_mat }}" height="{{ img_size }}" width="{{ img_size }}">

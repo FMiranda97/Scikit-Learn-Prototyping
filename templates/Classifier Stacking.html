@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:overflow-y="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+    <meta charset="UTF-8">
+    <title>Classifier Stacking</title>
+    <style>
+        body {
+            background: rgb(238, 238, 238);
+        }
+    </style>
+    <script>
+        function analyse_stack() {
+            let stack_model = $('input[name="stack_model"]:checked').val();
+            let chosen_classifiers = [];
+            $('input[name="classifiers"]:checked').each(function (index) {
+                chosen_classifiers.push('(\'' + (index + 1) + "\', " + this.value + ")");
+            });
+            let model = `${stack_model}(estimators=[${chosen_classifiers.join(', ')}])`;
+
+            let validation;
+            let n_splits = $('input[name="n_splits"]').val();
+            let validation_method = $('input[name="validation_method"]:checked').val();
+            if (validation_method.includes("KFold")) {
+                let n_repeats = $('input[name="n_repeats"]').val();
+                validation = `${validation_method}(n_splits=${n_splits}, n_repeats=${n_repeats})`
+            } else {
+                validation = `${validation_method}(n_splits=${n_splits})`
+            }
+
+            let scenario = $('input[name="scenario"]:checked').val();
+            let gadget = $('input[name="gadget"]:checked').val();
+            let instrument = $('input[name="instrument"]:checked').val();
+
+            $.ajax({
+                type: "GET",
+                url: "analyse_stack",
+                dataType: "json",
+                data: {
+                    "scenario": scenario,
+                    "gadget": gadget,
+                    "instrument": instrument,
+                    "model": model,
+                    "validation_method": validation
+                },
+                success: function (response) {
+                    let report = document.getElementById("report");
+                    report.innerHTML = response["content"];
+                }
+            })
+        }
+    </script>
+
+</head>
+<body>
+<div style="width: 100%; height: 7%;">
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">Home</a>
+        <a class="navbar-brand" href="/filters">Filters</a>
+        <a class="navbar-brand" href="/classifiers">Classifiers</a>
+        <a class="navbar-brand" href="/classifierstacks">Classifier Stacking</a>
+        <a class="navbar-brand" href="/help">Help</a>
+    </nav>
+</div>
+
+<div style="width: 100%; margin-left: 8px; height: 93%; overflow-y: scroll;">
+    <table class="table" style="width: 85%">
+        <tr>
+            <th>Scenario</th>
+            <th>Gadget</th>
+            <th>Instrument</th>
+        </tr>
+        <tr>
+            <td>
+                <div>
+                    <input class="form-check-input" type="radio" id="A" name="scenario" value="A" {% if request.GET.scenario == "A" %}  checked {% endif %}>
+                    <label class="form-check-label" for="A">A</label>
+                    <input class="form-check-input" type="radio" id="B" name="scenario" value="B" {% if not request.GET.scenario or request.GET.scenario == "B" %}  checked {% endif %}>
+                    <label class="form-check-label" for="B">B</label>
+                    <input class="form-check-input" type="radio" id="C" name="scenario" value="C" {% if request.GET.scenario == "C" %}  checked {% endif %}>
+                    <label class="form-check-label" for="C">C</label>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <input type="radio" id="phone" name="gadget" value="phone"{% if not request.GET.gadget or request.GET.gadget == "phone" %}  checked {% endif %}>
+                    <label for="phone">Phone</label>&nbsp;&nbsp;
+                    <input type="radio" id="watch" name="gadget" value="watch"{% if request.GET.gadget == "watch" %} checked {% endif %}>
+                    <label for="watch">Watch</label>&nbsp;&nbsp;
+                </div>
+            </td>
+
+            <td>
+                <div>
+                    <input type="radio" id="accel" name="instrument" value="accel"
+                            {% if not request.GET.instrument or request.GET.instrument == "accel" %}
+                           checked {% endif %}>
+                    <label for="accel">Accelerometer</label>&nbsp;&nbsp;
+                    <input type="radio" id="gyro" name="instrument" value="gyro"
+                            {% if request.GET.instrument == "gyro" %}  checked {% endif %}>
+                    <label for="gyro">Gyroscope</label>&nbsp;&nbsp;
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div style="width: 100%; height: 200px; display: flex">
+        <div style="width: 15%">
+            <h4>Choose Classifiers</h4>
+            {% for c in classifiers %}
+                <label>
+                    <input type="checkbox" name="classifiers" value="{{ c.model }}">
+                    {{ c.name }}
+                </label><br>
+            {% endfor %}
+        </div>
+
+        <div id="general_options" style="width: 15%; float: right">
+            <h4>Stacking Options</h4>
+            <label>Stacked Generalization
+                <input type="radio" name="stack_model" value="StackingClassifier" checked>
+            </label><br>
+            <label>Majority Voting
+                <input type="radio" name="stack_model" value="VotingClassifier">
+            </label>
+        </div>
+
+        <div id="general_options" style="width: 15%">
+            <h4>Cross Validation Method</h4>
+            <label>K-Fold
+                <input type="radio" name="validation_method" value="RepeatedKFold" checked>
+            </label><br>
+            <label>Stratified K-Fold
+                <input type="radio" name="validation_method" value="RepeatedStratifiedKFold">
+            </label><br>
+            <label>Shuffle Split
+                <input type="radio" name="validation_method" value="ShuffleSplit">
+            </label><br>
+            <label>Stratified Shuffle Split
+                <input type="radio" name="validation_method" value="StratifiedShuffleSplit">
+            </label><br>
+
+            <label>Number of splits:
+                <input type="number" name="n_splits" min="2" max="10" step="1" value="5">
+            </label><br>
+            <label>repetitions:
+                <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
+            </label><br>
+        </div>
+    </div>
+    <input class="btn btn-primary" type="button" onclick="analyse_stack()" value="Analyse Stack">
+
+    <div id="report" style="width: 100%; padding-top: 20px">
+
+    </div>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:overflow-y="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    {#    selector libraries#}
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.5/utils/Draggable.min.js"></script>
+
+
+    <meta charset="UTF-8">
+    <title>Classifiers</title>
+
+    <style>
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background: rgb(238, 238, 238);
+            overflow: hidden;
+        }
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+        .container {
+            position: relative;
+            align-content: center;
+            opacity: 0;
+            visibility: hidden;
+            width: 50%;
+        }
+
+        .list-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 60px;
+            width: 100%;
+        }
+
+        .item-content {
+            height: 100%;
+            border: 0 solid rgba(123, 123, 123, 0.498039);
+            border-radius: 4px;
+            color: rgb(153, 153, 153);
+            line-height: 60px;
+            padding-left: 32px;
+            font-size: 20px;
+            font-weight: 400;
+            background-color: rgb(255, 255, 255);
+            box-shadow: rgba(0, 0, 0, 0.2) 0 1px 2px 0;
+        }
+
+        input {
+            text-align: right;
+        }
+
+        ::-webkit-input-placeholder {
+            text-align: right;
+        }
+
+        :-moz-placeholder {
+            text-align: right;
+        }
+
+        .button_load {
+            width: 100%;
+            height: 10%;
+            padding-right: 0;
+            background: rgba(255, 255, 255, 1);
+            opacity: 1;
+            font-family: Poppins, serif;
+            font-weight: Normal;
+            font-size: 0.5vw;
+            border: 0.1vw solid rgba(0, 0, 0, 1);
+            box-shadow: 0.1vw 0.1vw 0 rgba(0, 0, 0, 0.25);
+            display: inline-block;
+        }
+    </style>
+    <script>
+        var rowSize, container, listItems, sortables, total;
+
+        function start_selector() {
+            rowSize = 70; // => container height / number of items
+            container = document.querySelector(".container");
+            listItems = Array.from(document.querySelectorAll(".list-item")); // Array of elements
+            //correct order spans
+            for (let i = 0; i < listItems.length; i++) {
+                let span = listItems[i].getElementsByTagName("span")[0];
+                span.innerHTML = (i + 1) + ". "
+            }
+            sortables = listItems.map(Sortable); // Array of sortables
+            total = sortables.length;
+            TweenLite.to(container, 0.5, {autoAlpha: 1});
+        }
+
+
+        function changeIndex(item, to) {
+        }
+
+        function Sortable(element, index) {
+
+            var content = element.querySelector(".item-content");
+            var order = element.querySelector(".order");
+
+            var animation = TweenLite.to(content, 0.3, {
+                boxShadow: "rgba(0,0,0,0.2) 0px 16px 32px 0px",
+                force3D: true,
+                scale: 0.95,
+                paused: true
+            });
+
+            var dragger = new Draggable(element, {
+                onDragStart: downAction,
+                onRelease: upAction,
+                onDrag: dragAction,
+                cursor: "inherit",
+                type: "y"
+            });
+
+            // Public properties and methods
+            var sortable = {
+                dragger: dragger,
+                element: element,
+                index: index,
+                setIndex: setIndex
+            };
+
+            TweenLite.set(element, {y: index * rowSize});
+
+            function setIndex(index) {
+
+                sortable.index = index;
+                order.textContent = index + 1 + ". ";
+
+                // Don't layout if you're dragging
+                if (!dragger.isDragging) layout();
+            }
+
+            function downAction() {
+                animation.play();
+                this.update();
+            }
+
+            function dragAction() {
+
+                // Calculate the current index based on element's position
+                var index = clamp(Math.round(this.y / rowSize), 0, total - 1);
+                console.log(this.x);
+                if (index !== sortable.index) {
+                    changeIndex(sortable, index);
+                }
+            }
+
+            function upAction() {
+                animation.reverse();
+                layout();
+            }
+
+            function layout() {
+                TweenLite.to(element, 0.3, {y: sortable.index * rowSize});
+            }
+
+            return sortable;
+        }
+
+        // Changes an elements's position in array
+        function arrayMove(array, from, to) {
+            array.splice(to, 0, array.splice(from, 1)[0]);
+        }
+
+        // Clamps a value to a min/max
+        function clamp(value, a, b) {
+            return value < a ? a : (value > b ? b : value);
+        }
+
+        function load_param_selectors() {
+            let knn = document.getElementById("knn-params");
+            let dt = document.getElementById("dt-params");
+            let randomf = document.getElementById("randomf-params");
+            let svc = document.getElementById("svm-params");
+            let params_header = document.getElementById("params-header");
+
+            let radios = document.getElementsByName("method");
+            let selected;
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    selected = radios[i].value;
+                    break;
+                }
+            }
+            knn.style.display = "none";
+            dt.style.display = "none";
+            randomf.style.display = "none";
+            svc.style.display = "none";
+            params_header.style.display = "block";
+            document.getElementById("general_options").style.display = "block";
+            switch (selected) {
+                case "KNeighborsClassifier":
+                    knn.style.display = "block";
+                    break;
+                case "DecisionTreeClassifier":
+                    dt.style.display = "block";
+                    break;
+                case "RandomForestClassifier":
+                    randomf.style.display = "block";
+                    break;
+                case "SVC":
+                    svc.style.display = "block";
+                    let degree_selector = document.getElementById("degree-div");
+                    let poly_option = document.getElementById("kernel-poly");
+                    if (poly_option.checked) {
+                        degree_selector.style.display = "block";
+                    } else {
+                        degree_selector.style.display = "none";
+                    }
+                    break;
+                default:
+                    params_header.style.display = "none";
+                    break;
+            }
+            if ($('input[name="validation_method"]:checked').val().includes("KFold")) {
+                document.getElementById("cross_val_repetitions").style.display = "block";
+            } else {
+                document.getElementById("cross_val_repetitions").style.display = "none";
+            }
+
+        }
+
+        function classifierAnalysis() {
+            let selected = $('input[name="method"]:checked').val();
+            let classifier;
+            switch (selected) {
+                case "KNeighborsClassifier":
+                    let k = $('input[name="n_neighbors"]').val();
+                    let weights = $('input[name="knn-weights"]:checked').val();
+                    classifier = `KNeighborsClassifier(n_neighbors=${k}, weights=\'${weights}\')`;
+                    break;
+                case "DecisionTreeClassifier":
+                    let DTcriterion = $('input[name="dt-criterion"]:checked').val();
+                    classifier = `DecisionTreeClassifier(criterion=\'${DTcriterion}\')`;
+                    break;
+                case "RandomForestClassifier":
+                    let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
+                    let bootstrap = $('#randomf-bootstrap').is(":checked");
+                    bootstrap = bootstrap == "true" ? "True" : "False";
+                    let n_estimators = $('input[name="n_estimators"]').val();
+                    classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
+                    break;
+                case "SVC":
+                    let C = $('input[name="C"]').val();
+                    let kernel = $('input[name="kernel"]:checked').val()
+                    let degree = $('input[name="degree"]').val();
+                    let n_estimators_svm = $('input[name="n_estimators_svm"]').val();
+                    let max_samples = 1.0 / n_estimators_svm;
+                    classifier = `OneVsRestClassifier(BaggingClassifier(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), max_samples=${max_samples}, n_estimators=${n_estimators_svm}))`;
+
+                    break;
+                default:
+                    classifier = `${selected}()`;
+                    break;
+            }
+
+            let validation;
+            let n_splits = $('input[name="n_splits"]').val();
+            let validation_method = $('input[name="validation_method"]:checked').val();
+            if (validation_method.includes("KFold")) {
+                let n_repeats = $('input[name="n_repeats"]').val();
+                validation = `${validation_method}(n_splits=${n_splits}, n_repeats=${n_repeats})`
+            } else {
+                validation = `${validation_method}(n_splits=${n_splits})`
+            }
+
+            let scenario = $('input[name="scenario"]:checked').val();
+            let gadget = $('input[name="gadget"]:checked').val();
+            let instrument = $('input[name="instrument"]:checked').val();
+
+            $.ajax({
+                type: "GET",
+                url: "analyse_classifiers",
+                dataType: "json",
+                data: {
+                    "scenario": scenario,
+                    "gadget": gadget,
+                    "instrument": instrument,
+                    "model": classifier,
+                    "validation_method": validation
+                },
+                success: function (response) {
+                    let report = document.getElementById("report");
+                    report.innerHTML = response["content"];
+                }
+            })
+        }
+
+
+        function classifierSaving() {
+            let selected = $('input[name="method"]:checked').val();
+            let name = $('input[name="classifier_name"]').val();
+            let classifier;
+            switch (selected) {
+                case "KNeighborsClassifier":
+                    let k = $('input[name="n_neighbors"]').val();
+                    let weights = $('input[name="knn-weights"]:checked').val();
+                    classifier = `KNeighborsClassifier(n_neighbors=${k}, weights=\'${weights}\')`;
+                    break;
+                case "DecisionTreeClassifier":
+                    let DTcriterion = $('input[name="dt-criterion"]:checked').val();
+                    classifier = `DecisionTreeClassifier(criterion=\'${DTcriterion}\')`;
+                    break;
+                case "RandomForestClassifier":
+                    let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
+                    let bootstrap = $('#randomf-bootstrap').is(":checked");
+                    bootstrap = bootstrap == "true" ? "True" : "False";
+                    let n_estimators = $('input[name="n_estimators"]').val();
+                    classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
+                    break;
+                case "SVC":
+                    let C = $('input[name="C"]').val();
+                    let kernel = $('input[name="kernel"]:checked').val()
+                    let degree = $('input[name="degree"]').val();
+                    let n_estimators_svm = $('input[name="n_estimators_svm"]').val();
+                    let max_samples = 1.0 / n_estimators_svm;
+                    classifier = `OneVsRestClassifier(BaggingClassifier(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), max_samples=${max_samples}, n_estimators=${n_estimators_svm}))`;
+
+                    break;
+                default:
+                    classifier = `${selected}()`;
+                    break;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "save_classifier",
+                dataType: "json",
+                data: {
+                    "name": name,
+                    "model": classifier
+                },
+                success: function (response) {
+                    if (response["status"] === 200) {
+                        alert("Classifier saved. It should now be visible in the stacking section.")
+                    } else {
+                        alert(`Error: ${response["status"]}. Classifier saving failed.`)
+                    }
+                }
+            })
+        }
+
+    </script>
+
+</head>
+<body onload="start_selector(); load_param_selectors();">
+<div style="width: 100%; height: 7%;">
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">Home</a>
+        <a class="navbar-brand" href="/filters">Filters</a>
+        <a class="navbar-brand" href="/classifiers">Classifiers</a>
+        <a class="navbar-brand" href="/classifierstacks">Classifier Stacking</a>
+        <a class="navbar-brand" href="/help">Help</a>
+    </nav>
+</div>
+
+<div style="width: 100%; margin-left: 8px; height: 93%; overflow-y: scroll;">
+    <form action="classifiers">
+        <table class="table" style="width: 85%">
+            <tr>
+                <th>Scenario</th>
+                <th>Gadget</th>
+                <th>Instrument</th>
+            </tr>
+            <tr>
+                <td>
+                    <div>
+                        <input class="form-check-input" type="radio" id="A" name="scenario" value="A" {% if request.GET.scenario == "A" %}  checked {% endif %}>
+                        <label class="form-check-label" for="A">A</label>
+                        <input class="form-check-input" type="radio" id="B" name="scenario" value="B" {% if not request.GET.scenario or request.GET.scenario == "B" %}  checked {% endif %}>
+                        <label class="form-check-label" for="B">B</label>
+                        <input class="form-check-input" type="radio" id="C" name="scenario" value="C" {% if request.GET.scenario == "C" %}  checked {% endif %}>
+                        <label class="form-check-label" for="C">C</label>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <input type="radio" id="phone" name="gadget" value="phone"{% if not request.GET.gadget or request.GET.gadget == "phone" %}  checked {% endif %}>
+                        <label for="phone">Phone</label>&nbsp;&nbsp;
+                        <input type="radio" id="watch" name="gadget" value="watch"{% if request.GET.gadget == "watch" %} checked {% endif %}>
+                        <label for="watch">Watch</label>&nbsp;&nbsp;
+                    </div>
+                </td>
+
+                <td>
+                    <div>
+                        <input type="radio" id="accel" name="instrument" value="accel"
+                                {% if not request.GET.instrument or request.GET.instrument == "accel" %}
+                               checked {% endif %}>
+                        <label for="accel">Accelerometer</label>&nbsp;&nbsp;
+                        <input type="radio" id="gyro" name="instrument" value="gyro"
+                                {% if request.GET.instrument == "gyro" %}  checked {% endif %}>
+                        <label for="gyro">Gyroscope</label>&nbsp;&nbsp;
+                    </div>
+                </td>
+            </tr>
+        </table>
+        {% comment %}scenario selection{% endcomment %}
+        <div style="display: flex; width: 100%; height: 350px">
+            {% comment %}load a filter pipeline{% endcomment %}
+            <div style="padding-right: 10px; overflow-y: auto; width: 15%; height: 100%">
+                <h4>Load a Filter Pipeline</h4>
+                {% for f in saved_filters %}
+                    <div class="btn-group" style="width: 100%; height: auto; display: flex; border-radius: 1px">
+                        <div style="width: 80%; height: 100%; display: flex; margin-right: 1px; padding-bottom: 3px">
+                            <button type="submit" class="btn btn-primary btn-lg btn-group-justified" value="{{ f.id }}" name="load">{{ f.name }}</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% comment %}view filters{% endcomment %}
+            <div class="container" id="selector" style="width: 55%; overflow-y: auto">
+                {% for i, fil in filters_info.items %}
+                    <div class="list-item">
+                        <div class="item-content">
+                            {% if fil.method == 0 %}
+                                <span class="order">{{ forloop.counter }}. </span>remove correlated ({{ fil.threshold }}) => {{ fil.n_feat }}
+                            {% else %}
+                                <span class="order">{{ forloop.counter }}. </span>{{ fil.name }} => {{ fil.n_feat }}
+                            {% endif %}
+                        </div>
+                        <input type="hidden" name="methods[]" value="{{ fil.method }}">
+                        <input type="hidden" name="quantities[]" value="{{ fil.n_feat }}">
+                        <input type="hidden" name="thresholds[]" value="{{ fil.threshold }}">
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% comment %}select a classifier{% endcomment %}
+            <div style="float: left; margin-left: 80px; overflow-y: auto; width: 30%">
+                <h4>Select a Classifier</h4>
+                <input class="form-check-input" type="radio" id="mdc" name="method" value="MDC" onclick="load_param_selectors()" checked>
+                <label class="form-check-label" for="mdc">Minimum Distance Classifier</label><br>
+                <input class="form-check-input" type="radio" id="perceptron" name="method" value="Perceptron" onclick="load_param_selectors()">
+                <label class="form-check-label" for="perceptron">Perceptron</label><br>
+                <input class="form-check-input" type="radio" id="lda" name="method" value="LinearDiscriminantAnalysis" onclick="load_param_selectors()">
+                <label class="form-check-label" for="lda">Linear Discriminant Analysis</label><br>
+                <input class="form-check-input" type="radio" id="qda" name="method" value="QuadraticDiscriminantAnalysis" onclick="load_param_selectors()">
+                <label class="form-check-label" for="qda">Quadratic Discriminant Analysis</label><br>
+                <input class="form-check-input" type="radio" id="knn" name="method" value="KNeighborsClassifier" onclick="load_param_selectors()">
+                <label class="form-check-label" for="knn">K-Nearest Neighbors</label><br>
+                <input class="form-check-input" type="radio" id="dt" name="method" value="DecisionTreeClassifier" onclick="load_param_selectors()">
+                <label class="form-check-label" for="dt">Decision Tree</label><br>
+                <input class="form-check-input" type="radio" id="randomf" name="method" value="RandomForestClassifier" onclick="load_param_selectors()">
+                <label class="form-check-label" for="randomf">Random Forest</label><br>
+                <input class="form-check-input" type="radio" id="bayes" name="method" value="GaussianNB" onclick="load_param_selectors()">
+                <label class="form-check-label" for="bayes">GaussianNB</label><br>
+                <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
+                <label class="form-check-label" for="svm">SVC</label><br>
+                <h4 id="params-header" style="display: none">Classifier Parameters</h4>
+                <div id="knn-params" style="display: none">
+                    <label for="n_neighbors">Number of Neighbors:</label>
+                    <input type="number" id="n_neighbors" name="n_neighbors" min="1" max="100" value="5"><br>
+
+                    <label>Weights:</label>
+                    <input type="radio" id="knn-uniform" name="knn-weights" value="uniform" checked>
+                    <label for="knn-uniform">uniform</label>
+                    <input type="radio" id="knn-distance" name="knn-weights" value="distance">
+                    <label for="knn-distance">distance</label>
+                </div>
+                <div id="dt-params" style="display: none">
+                    <label>Criterion:</label>
+                    <input type="radio" id="dt-gini" name="dt-criterion" value="gini" checked>
+                    <label for="dt-gini">gini</label>
+                    <input type="radio" id="dt-entropy" name="dt-criterion" value="entropy">
+                    <label for="dt-entropy">entropy</label>
+                </div>
+                <div id="randomf-params" style="display: none">
+                    <label>Criterion:</label>
+                    <input type="radio" id="randomf-gini" name="randomf-criterion" value="gini" checked>
+                    <label for="randomf-gini">gini</label>
+                    <input type="radio" id="randomf-entropy" name="randomf-criterion" value="entropy">
+                    <label for="randomf-entropy">entropy</label><br>
+
+                    <label for="n_estimators">Number of Trees:</label>
+                    <input type="number" id="n_estimators" name="n_estimators" min="10" max="1000" step="10" value="100"><br>
+
+                    <label for="randomf-bootstrap">Use Boostrap:</label>
+                    <input type="checkbox" id="randomf-bootstrap" name="randomf-bootstrap" checked>
+                </div>
+                <div id="svm-params" style="display: none">
+                    <div style="width: 50%">
+                        To avoid long validation time issues, SVC is always trained as a Bagging ensemble with at least 5 and no more than 50 estimators.<br>
+                        For the same reason, linear or polynomial kernels are recommended.<br>
+                        This may still take a few minutes to load.<br>
+                    </div>
+
+
+                    <label for="n_estimators_svm">Number of Bagging Estimators:</label>
+                    <input type="number" id="n_estimators_svm" name="n_estimators_svm" min="5" max="50" step="1" value="10"><br>
+
+                    <label for="C">C:</label>
+                    <input type="number" id="C" name="C" min="0.25" max="4" step="0.25" value="1"><br>
+
+                    <label>Kernel:</label>
+                    <input type="radio" id="kernel-linear" name="kernel" value="linear" onclick="load_param_selectors()">
+                    <label for="kernel-linear">linear</label>
+                    <input type="radio" id="kernel-poly" name="kernel" value="poly" onclick="load_param_selectors()" checked>
+                    <label for="kernel-poly">poly</label>
+                    <input type="radio" id="kernel-rbf" name="kernel" value="rbf" onclick="load_param_selectors()">
+                    <label for="kernel-rbf">rbf</label>
+                    <input type="radio" id="kernel-sigmoid" name="kernel" value="sigmoid" onclick="load_param_selectors()">
+                    <label for="kernel-sigmoid">sigmoid</label><br>
+
+                    <div id="degree-div" style="display: none">
+                        <label for="degree">Degree:</label>
+                        <input type="number" id="degree" name="degree" min="2" max="10" step="1" value="3"><br>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        {% comment %}select evaluation metrics{% endcomment %}
+        <div id="general_options" style="padding-top: 20px; width: 100%; float: right">
+            <h4>Cross Validation Method</h4>
+            <label>K-Fold
+                <input type="radio" name="validation_method" value="RepeatedKFold" onclick="load_param_selectors();" checked>
+            </label><br>
+            <label>Stratified K-Fold
+                <input type="radio" name="validation_method" value="RepeatedStratifiedKFold" onclick="load_param_selectors();">
+            </label><br>
+            <label>Shuffle Split
+                <input type="radio" name="validation_method" value="ShuffleSplit" onclick="load_param_selectors();">
+            </label><br>
+            <label>Stratified Shuffle Split
+                <input type="radio" name="validation_method" value="StratifiedShuffleSplit" onclick="load_param_selectors();">
+            </label><br>
+
+            <label>Number of splits:
+                <input type="number" name="n_splits" min="2" max="10" step="1" value="5">
+            </label><br>
+            <div id="cross_val_repetitions">
+                <label>repetitions:
+                <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
+            </label>
+            </div><br>
+
+            <input type="button" class="btn btn-primary" onclick="classifierAnalysis()" value="Analyse Classifier">
+            <input type="button" class="btn btn-primary" onclick="classifierSaving()" value="Save Classifier">
+            <input type="text" id="classifier_name" name="classifier_name" placeholder="e.g. filter X + MDC"><br>
+        </div>
+    </form>
+
+    <div id="report" style="width: 100%; display: inline-block">
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:overflow-y="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    {#    selector libraries#}
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.5/utils/Draggable.min.js"></script>
+
+
+    <meta charset="UTF-8">
+    <title>Help</title>
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background: rgb(238, 238, 238);
+            overflow: hidden;
+        }
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+        input {
+            text-align: right;
+        }
+
+        ::-webkit-input-placeholder {
+            text-align: right;
+        }
+
+        :-moz-placeholder {
+            text-align: right;
+        }
+
+    </style>
+
+</head>
+<body>
+<div style="width: 100%; height: 7%;">
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">Home</a>
+        <a class="navbar-brand" href="/filters">Filters</a>
+        <a class="navbar-brand" href="/classifiers">Classifiers</a>
+        <a class="navbar-brand" href="/classifierstacks">Classifier Stacking</a>
+        <a class="navbar-brand" href="/help">Help</a>
+    </nav>
+</div>
+<div style="width: 100%; margin-left: 8px; height: 93%; overflow-y: scroll;">
+    <h1>Table of Contents</h1>
+    <div id="toc_container">
+        <ul class="toc_list">
+            <li><a href="#Introduction">1 Introduction</a>
+                <ul>
+                    <li><a href="#What_should_I_know">1.1 What should I know before starting?</a></li>
+                </ul>
+            </li>
+            <li><a href="#Feature_Selection_and_Reduction">2 Feature Selection and Reduction</a>
+                <ul>
+                    <li><a href="#How_do_Select_K_Best">2.1 How do Select K Best methods rank features?</a>
+                        <ul>
+                            <li><a href="#Univariate_testing">2.1.1 Univariate testing</a></li>
+                            <li><a href="#Scoring_feature">2.1.2 Scoring Feature Characteristics</a></li>
+                            <li><a href="#AUC_score">2.1.3 AUC score</a></li>
+                            <li><a href="#AUC_KS_CHI">2.1.4 AUC-KS-Chi2 Normalized Multiplication</a></li>
+                            <li><a href="#Correlation_penalty">2.1.5 Correlation Penalty</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#Analysing_selected_features">2.2 Analysing selected features</a></li>
+                    <li><a href="#now_what">2.3 I know my features, now what?</a></li>
+                </ul>
+            </li>
+            <li><a href="#Classifier_Selection_and_Validation">3 Classifier Creation and Validation</a>
+                <ul>
+                    <li><a href="#create_a_classifier">3.1 How do I create a classifier?</a></li>
+                    <li><a href="#know_if_it_is_any_good">3.2 I created a classification model, but how do I know if it is any good?</a></li>
+                    <li><a href="#SVC">3.3 Support Vector Machine Classifier (SVC)</a></li>
+                    <li><a href="#stacking">3.4 Classifier Stacking</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <h1 id="Introduction">1 Introduction</h1>
+    <div>
+        <span>
+            <p>This app is an high level exploratory tool for Pattern Recognition algorithms.</p>
+            <p>It works on a Dataset provided by ENTITY HERE, being composed by DATA SET INFORMATION HERE, CONTEXT, N FEATURES, N CLASSES.</p> {% comment %}TODO fix me for new data{% endcomment %}
+            <p>It allows the user to test multiple feature selection, feature reduction and classification techniques,
+            providing multiple and variate analysis options to study the effects of each technique.</p>
+            <p>While testing said techniques users can build Classification Pipelines which allow for
+            usage of chained feature selection and reduction techniques, terminated by a classification model.</p>
+        </span>
+
+        <h3 id="What_should_I_know">1.1 What should I know before starting?</h3>
+        <span>
+            <p>
+                While this is built as a webserver, the app is not meant to be used online. It runs on a Django server and makes use of a SQL Lite database.
+            </p>
+            <p>
+                No security measures were taken into account, there is no user authentication, anti-SQL injection, XSS or any sort of protection,
+            making the release of this app as an online service very insecure.
+            </p>
+            <p>
+                Furthermore, this app uses parallel CPU parallelization, utilizing by the default the full power of the CPU.
+            </p>
+            <p>
+                While the CPU won't be overloaded by a single request, other programs performance may be impacted and making simultaneous requests may lead the computer to crash.
+            </p>
+            <p>
+                Processing requests may take a few seconds and in more expensive processes such as long filter sequences,
+            Support Vector Machine classifiers and classifier stacking validation, it may take up to a few minutes.
+            </p>
+            <p>
+                It is advisable to test techniques in simple problems and with few repetitions before deciding to test in more complex problems,
+            so that long validation times can be predicted in advance.
+            </p>
+        </span>
+    </div>
+
+    <h1 id="Feature_Selection_and_Reduction">2 Feature Selection and Reduction</h1>
+    <div>
+
+        <span>
+            <p>
+                Selecting adequate features and applying dimensionality reduction techniques can be done via the Filters tab.
+            </p>
+            <p>
+                On the left side you'll find a list of filters that can be selected to build a filter pipeline.
+                To do so, select a filter, edit the parameter variables below the selection list, and press the arrow button to add it to the pipeline.
+                Once on the pipeline, filter order can be changed by dragging blocks to the desired position.
+            </p>
+            <p>
+                There are 3 types of filters that can be applied.
+                The first one will search for pairs of features that are correlated above a given threshold and blindly remove on of the elements of that pair
+                until no features above that threshold exists, or a given minimum number of features is attained.
+            </p>
+            <p>
+                The second type of filters will compute heuristics for the quality of each feature, and select the K best features. K value should be defined by the user.
+            </p>
+            <p>
+                The third and final type of filters are standard dimensionality reduction techniques.
+                These will not select features but rather project them to a lower dimension.
+                As such, after applying this filter features will not have a physical meaning, being their names replaced by "Feature X" with X being the feature index.
+            </p>
+        </span>
+
+        <h3 id="How_do_Select_K_Best">2.1 How do Select K Best methods rank features?</h3>
+        <span>
+            <p>
+                There are different approaches in each method, to simplify the explanation we'll categorize the approaches.
+            </p>
+
+            <h4 id="Univariate_testing">2.1.1 Univariate testing</h4>
+            <p>
+                Chi-Squared, F-statistic and Mutual information do univariate statistical tests of each feature against the output variable as a measure of feature relevancy.
+            </p>
+
+            <h4 id="Scoring_feature">2.1.2 Scoring Feature Characteristics</h4>
+            <p>
+                Kolmogorov–Smirnov and Fisher Score tests evaluate feature distribution over each class.
+            </p>
+            <p>
+                Fisher score searches for features where class means are far apart and class variances are low.
+            </p>
+            </p>
+            <p>
+                Kolmogorov–Smirnov test uses H statistic as a score.
+                This method tests the null hypothesis that samples of each class follow the same distribution, the higher the H value,
+                the strongest the rejection of null hypothesis and therefore the more discriminative the feature.
+            </p>
+
+            <h4 id="AUC_score">2.1.3 AUC score</h4>
+            <p>
+                This method is the most computationally expensive of all presented methods.
+                For each feature, it uses half the data set to train a Linear SVM Classifier with OneVsRest multiclass strategy.
+                Then, for each class, it calculates the Area Under ROC curve (AUC).
+            </p>
+            <p>
+                In multiclass problems, the multiple AUC values can be combined by either multiplication or summation. In binary problems these solutions are equivalent.
+            </p>
+
+            <h4 id="AUC_KS_CHI">2.1.4 AUC-KS-Chi2 Normalized Multiplication</h4>
+            <p>
+                This method is a simple experiment with no backing literature. The idea behind this is to combine the 3 types of feature ranking previously mentioned.
+            </p>
+            <p>
+                For each feature, the AUC score, Kolmogorov–Smirnov test and Chi-Squared test are calculated.
+                Then for each ranking method we normalize the obtained scores between 0 and 1. Finally the 3 scores are multiplied to obtain the final result.
+            </p>
+            <h4 id="Correlation_penalty">2.1.5 Correlation Penalty</h4>
+            <p>
+                All but the univariate testing methods have a version with correlation penalty.
+                The goal of this version of methods is to not have highly correlated features score the same, leading to lowly correlated K best features.
+            </p>
+            <p>
+                This method starts by ranking the features according to the regular method and calculating the absolute Pearson correlation matrix.
+                The algorithm then performs a number of iterations equal to the number of features.
+                At each iteration the best feature is moved to a separate list, and every other feature is multiplied by the penalty.
+                The penalty is given by (1 - correlation**2).
+            </p>
+            <p>
+                The penalty is given by <em>1 - corr<sup>2</sup></em> where <em>corr</em> is the correlation of the penalized feature to the feature saved in that iteration.
+            </p>
+        </span>
+
+        <h3 id="Analysing_selected_features">2.2 Analysing selected features</h3>
+        <span>
+            <p>
+                Once you've built your filters pipeline, you can can get a full report on the effects of each specific filter on the feature set.
+                To do this, on top of the page select the scenario you which to analyse and then press the <em>Analyse Pipeline</em> button. {% comment %}TODO fix me for new data{% endcomment %}
+            </p>
+            <p>
+                Once processing is done, at the bottom of the page you'll get a report on the performance of your filters.
+                First you'll have a table describing the scenario, how many different classes there is, how many samples you have for each class
+                and how many features remain at the end of the filtering.
+            </p>
+            <p>
+                After that you'll get a report on the features distribution and correlation before any filter is applied.
+                Then, for each filter in your pipeline a report will be shown showing remaining feature distribution via table and plots of up to 4 most important features.
+                You'll get as well an absolute feature correlation heatmap and a list of features ordered by score. On this list, struck through entries have been filtered out at that stage.
+            </p>
+        </span>
+
+        <h3 id="now_what">2.3 I know my features, now what?</h3>
+        <span>
+            <p>
+                If you're done selecting how to filter your features and now want to test on an actual classifier you can take your filters to the Classifiers tab.
+            </p>
+            <p>
+                To do that, once the filter pipeline is built, press <em>Analyse Pipeline</em>. After processing the Pipeline Analysis Report will show up.
+                There you can find a field to enter a name and the <em>Save Analysed Pipeline</em> button.
+            </p>
+            <p>
+                Once saved, pipelines can be loaded on top of the page at both Filters and Classifiers tabs.
+                From the Filters tab, saved pipelines can also be deleted by pressing the <em>X</em> button.
+            </p>
+        </span>
+    </div>
+
+    <h1 id="Classifier_Selection_and_Validation">3 Classifier Creation and Validation</h1>
+    <div>
+        <span>
+            On this section it is assumed that you have read the <strong>Feature Selection and Reduction</strong> section and saved your first pipeline already.
+            To get started enter the Classifiers tab.
+        </span>
+        <h3 id="create_a_classifier">3.1 How do I create a classifier?</h3>
+        <span>
+            <p>
+                For starters you'll need a filter pipeline. You can load your pipeline on the left side of the page.
+                Loaded pipelines will show in the middle of the page similarly to what is found on the Filters tab, however in this section they are not editable.
+            </p>
+            <p>
+                Now that you have your filters, on the right side of the page you can choose one of the possible classifier models.
+                If you pick K-Nearest Neighbors, Decision Tree, Random Forest, or SVC classifiers extra options will show up below the selector and you should adjust to your liking.
+            </p>
+            <p>
+                You can now at the bottom of the page give a name to your <em>filters + classifier</em> classification pipeline. Saved models can be seen on the Classifier Stacking tab.
+            </p>
+        </span>
+
+        <h3 id="know_if_it_is_any_good">3.2 I created a classification model, but how do I know if it is any good?</h3>
+        <span>
+            <p>
+                At the bottom of the page you can setup a cross validation method using any of 4 methods: K-Fold, Shuffle Split and their Stratified versions.
+            </p>
+            <p>
+                K-Fold method allows you to make sure you test on the whole dataset while Shuffle split offers no guarantees, allowing more randomness on the sample distribution.
+                Stratified versions will keep the proportion of samples at each split roughly the same to that on the original dataset, allowing you to avoid class imbalance.
+            </p>
+            <p>
+                In K-Fold the test split will always be <em><sup>1</sup>/<sub>n</sub></em> th of the dataset, where <em>n</em> is the number of splits.
+                Meanwhile, on Shuffled Split the test size with always be 10% of the dataset.
+                Now that you are ready press <em>Analyse Classifier</em>.
+            </p>
+            <p>
+                Once processing is done a report will be shown at the bottom of the page.
+                First you'll see a table with metrics of how long it took to train the algorithm, and how long it took to score the whole test set.
+                On the same table you'll also find the general accuracy, and the f1m precision and recall metrics using a macro averaging method.
+            </p>
+            <p>
+                Below that you'll also find a table which trains the model in a OneVsRest fashion and calculates sensibility and sensitivity for each class.
+                Finally you'll get a confusion matrix with normalized rows. Here each row represents the true class of the samples and each column represents the classifiers prediction.
+            </p>
+            <p>
+                If your metrics variation is high you can try increasing the number of repetitions in K-Fold or the number of splits in Shuffled Split, but beware this will make analysis take longer.
+            </p>
+        </span>
+        <h3 id="SVC">3.3 Support Vector Machine Classifier (SVC)</h3>
+        <span>
+            <p>
+                To avoid long validation time issues due to quadratic or worse training and scoring complexity, SVC is always trained as a Bagging ensemble with at least 5 and no more than 50 estimators.
+                For the same reason, linear or polynomial kernels are recommended.
+            </p>
+            <p>
+                This may still take a few minutes to load and it is therefore also <strong>recommended to not use repetitions on cross validation for this method</strong>.
+            </p>
+        </span>
+
+        <h3 id="stacking">3.4 Classifier Stacking</h3>
+        <span>
+            <p>
+                Once you have created and analysed multiple classifiers, you may still not be satisfied with the quality of your models.
+                To increase the performance of your model you may hand pick classifiers to an ensemble, with each classifier possibly using a different set of features.
+            </p>
+            <p>
+                To do this, save the classifiers you wish to use and open the Classifier Stacking tab.
+            </p>
+            <p>
+                On this interface you can choose which classifiers you wanna use by selecting the respective checkboxes on the left side of the page.
+                Then the stacking and cross validation methods can be chosen as well.
+            </p>
+            <p>
+                <em>Stacked Generalization</em> feeds the outputs of each individual classifier into a Logistic Regression model which does the final classification.
+                <em>Majority voting</em> selects the most voted class out of all estimators outputs.
+            </p>
+            <p>
+                The ensemble analysis is done similarly to that of individual classifiers.
+            </p>
+        </span>
+    </div>
+</div>
+</body>
+</html>
