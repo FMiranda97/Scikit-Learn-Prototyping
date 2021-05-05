@@ -20,7 +20,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.preprocessing import label_binarize
+from sklearn.preprocessing import label_binarize, FunctionTransformer
 from sklearn.svm import LinearSVC
 
 from sklearn.feature_selection import SelectKBest, chi2, f_classif, mutual_info_classif
@@ -75,7 +75,6 @@ def classifier_validation(X, y, model, validation_splitter):
     validation_splitter = eval(validation_splitter)
     scores = cross_validate(model, X, y, cv=validation_splitter, scoring=['accuracy', 'f1_macro', 'precision_macro', 'recall_macro'], n_jobs=-1)
     scores = {k: (np.mean(v) * 100, np.std(v) * 100) for k, v in scores.items()}
-
     sens_spec = perclass_sens_spec(model, X, y)
     y_pred = cross_val_predict(model, X, y, cv=StratifiedKFold(n_splits=5), n_jobs=-1)
     conf_mat = confusion_matrix(y, y_pred, normalize='true')

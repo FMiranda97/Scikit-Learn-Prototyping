@@ -12,6 +12,13 @@ def get_data(data_set) -> (pd.DataFrame, np.ndarray):
     X = df.drop(['state'], axis=1)
     return X, y
 
+def get_data_from_csv(data_set) -> (pd.DataFrame, np.ndarray):
+    # TODO get latest loaded csv
+    df = pd.read_csv(data_set, index_col=False)
+    y = np.array(df['state'])
+    X = df.drop(['state'], axis=1)
+    return X, y
+
 
 # if __name__ == '__main__':
 #     get_data()

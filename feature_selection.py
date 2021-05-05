@@ -130,7 +130,10 @@ def filter_correlated(X: pd.DataFrame, threshold: float = 0.5, limit=None) -> pd
         candidates_total_correlation = {i: np.nansum(correlation_values[i]) for i in candidates}
         maximum = max(candidates_total_correlation.values())
         candidate_to_remove = random.choice([k for k, v in candidates_total_correlation.items() if v == maximum])
-        X_new = X_new.drop(X_new.columns[candidate_to_remove], axis=1)
+        try:
+            X_new = X_new.drop(X_new.columns[candidate_to_remove], axis=1)
+        except:
+            X_new = X_new[:, [False if x == candidate_to_remove else True for x in range(X_new.shape[1])]]
     return X_new
 
 
