@@ -97,7 +97,6 @@
             <p>This app is an high level exploratory tool for Pattern Recognition algorithms.</p>
             <p>Any dataset can be upload as long as it is in CSV format with header and the class column is identified as "state".
                 For best results, features should be normalized between 0 and 1.
-            </p> {% comment %}TODO fix me for new data{% endcomment %}
             <p>It allows the user to test multiple feature selection, feature reduction and classification techniques,
             providing multiple and variate analysis options to study the effects of each technique.</p>
             <p>While testing said techniques users can build Classification Pipelines which allow for
@@ -202,8 +201,7 @@
             </p>
             <h4 id="Correlation_penalty">2.1.5 Correlation Penalty</h4>
             <p>
-                All but the univariate testing methods have a version with correlation penalty.
-                The goal of this version of methods is to not have highly correlated features score the same, leading to lowly correlated K best features.
+                The goal of this option is to not have highly correlated features score the same and therefore be selected together.
             </p>
             <p>
                 This method starts by ranking the features according to the regular method and calculating the absolute Pearson correlation matrix.
