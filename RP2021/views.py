@@ -55,15 +55,17 @@ def get_filter_info_from_request(request):
     filter_info = {
         'filters': [int(x) for x in request.GET.getlist("methods[]")],
         'filter_sizes': [int(x) for x in request.GET.getlist("quantities[]")],
-        'thresholds': [float(x) for x in request.GET.getlist("thresholds[]")]
+        'thresholds': [float(x) for x in request.GET.getlist("thresholds[]")],
+        'corr_penalties': [True if x == "True" else False for x in request.GET.getlist("corr_penalties[]")]
     }
     filter_info = {
         i: {
             'method': method,
             'n_feat': n_feat,
             'threshold': threshold,
+            'corr_penalty': corr_penalty,
             'name': get_method_name(method)
-        } for i, (method, n_feat, threshold) in enumerate(zip(filter_info['filters'], filter_info['filter_sizes'], filter_info['thresholds']))
+        } for i, (method, n_feat, threshold, corr_penalty) in enumerate(zip(filter_info['filters'], filter_info['filter_sizes'], filter_info['thresholds'], filter_info['corr_penalties']))
     }
     return filter_info
 
@@ -90,10 +92,10 @@ def analyse_filters(filter_info, request):
                 "feat_table": feature_analysis(X, y),
                 "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
             })
-        elif fil['method'] < 13:
-            X, y, scores = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'])
+        elif fil['method'] < 8:
+            X, y, scores = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'], corr_penalty=fil['corr_penalty'])
             post_filter.append({
-                "title": "%d. %s => %d features" % (i + 1, get_method_name(fil['method']), fil['n_feat']),
+                "title": "%d. %s => %d features, corr_penalty = %s" % (i + 1, get_method_name(fil['method']), fil['n_feat'], fil['corr_penalty']),
                 "scores": scores,
                 "score_metric": "metric %d" % fil['method'],
                 "n_feat": fil['n_feat'],
@@ -101,7 +103,7 @@ def analyse_filters(filter_info, request):
                 "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
             })
         else:
-            X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 11)
+            X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 8)
             post_filter.append({
                 "title": "%d. %s => %d features" % (i + 1, get_method_name(fil['method']), fil['n_feat']),
                 "n_feat": fil['n_feat'],
@@ -200,9 +202,10 @@ def save_classifier(request):
         if fil['method'] == 0:
             pipeline_steps.append('FunctionTransformer(filter_correlated, kw_args={\'threshold\': %f, \'limit\':%d})' % (fil['threshold'], fil['n_feat']))
         elif fil['method'] < 12:
-            pipeline_steps.append(get_feature_filtering_model(fil['method'], fil['n_feat']))
+            filter_model = 'SelectKBest(general_classif(classif=%s, corr_penalty=%s), k=%d)' % (get_feature_filtering_model(fil['method']), fil['corr_penalty'], fil['n_feat'])
+            pipeline_steps.append(filter_model) # TODO
         else:
-            pipeline_steps.append(str(get_feature_reduction_model(fil['method'] - 11, fil['n_feat'])))
+            pipeline_steps.append(str(get_feature_reduction_model(fil['method'] - 8, fil['n_feat'])))
     model = request.GET['model']
     name = request.GET['name']
     pipeline_steps.append(model)
@@ -218,10 +221,10 @@ def analyse_classifiers(request):
     for i, fil in filter_info.items():
         if fil['method'] == 0:
             X = filter_correlated(X, threshold=fil['threshold'], limit=fil['n_feat'])
-        elif fil['method'] < 13:
-            X, y, _ = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'])
+        elif fil['method'] < 8:
+            X, y, _ = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'], corr_penalty=fil['corr_penalty'])
         else:
-            X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 11)
+            X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 8)
     model = request.GET['model']
     validation_splitter = request.GET['validation_method']
 

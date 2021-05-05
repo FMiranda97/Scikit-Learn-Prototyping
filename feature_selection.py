@@ -244,11 +244,20 @@ def multi_stats_classif_correlation_penalty(X: pd.DataFrame, y: np.ndarray, pena
     return np.array(scores)
 
 
-def feature_filtering(X: pd.DataFrame, y: np.ndarray, n_feat: int = 3, method: int = 1) -> Tuple[
-    pd.DataFrame, np.ndarray, dict]:
+def general_classif(classif: callable = ks_classif, corr_penalty=False, penalty_coefficient: float = 2) -> ():
+    def classif_func(X: pd.DataFrame, y: np.ndarray):
+        scores, pvalues = classif(X, y)
+        if corr_penalty:
+            scores = correlation_penalty(X, scores, penalty_coefficient=penalty_coefficient)
+        return np.array(scores), np.array(pvalues)
+
+    return classif_func
+
+
+def feature_filtering(X: pd.DataFrame, y: np.ndarray, n_feat: int = 3, method: int = 1, corr_penalty=False) -> Tuple[pd.DataFrame, np.ndarray, dict]:
     n_feat = min(n_feat, len(X.columns))
-    if method > 0 and method < 13:
-        selector = eval(get_feature_filtering_model(method, n_feat))
+    if method > 0 and method < 9:
+        selector = SelectKBest(general_classif(classif=get_feature_filtering_model(method), corr_penalty=corr_penalty), k=n_feat)
     else:
         return X, y, {}
     selector = selector.fit(X, y)
@@ -262,31 +271,23 @@ def feature_filtering(X: pd.DataFrame, y: np.ndarray, n_feat: int = 3, method: i
     return X_new, y, scores
 
 
-def get_feature_filtering_model(method, n_feat):
+def get_feature_filtering_model(method):
     if method == 1:
-        selector = 'SelectKBest(chi2, k=%d)' % n_feat
+        selector = chi2
     elif method == 2:
-        selector = 'SelectKBest(f_classif, k=%d)' % n_feat
+        selector = f_classif
     elif method == 3:
-        selector = 'SelectKBest(ks_classif, k=%d)' % n_feat
+        selector = ks_classif
     elif method == 4:
-        selector = 'SelectKBest(mutual_info_classif, k=%d)' % n_feat
+        selector = mutual_info_classif
     elif method == 5:
-        selector = 'SelectKBest(ks_classif_correlation_penalty, k=%d)' % n_feat
+        selector = auc_sum_classif
     elif method == 6:
-        selector = 'SelectKBest(auc_sum_classif, k=%d)' % n_feat
+        selector = auc_mul_classif
     elif method == 7:
-        selector = 'SelectKBest(auc_mul_classif, k=%d)' % n_feat
+        selector = multi_stats_classif
     elif method == 8:
-        selector = 'SelectKBest(auc_sum_classif_correlation_penalty, k=%d)' % n_feat
-    elif method == 9:
-        selector = 'SelectKBest(auc_mul_classif_correlation_penalty, k=%d)' % n_feat
-    elif method == 10:
-        selector = 'SelectKBest(multi_stats_classif, k=%d)' % n_feat
-    elif method == 11:
-        selector = 'SelectKBest(multi_stats_classif_correlation_penalty, k=%d)' % n_feat
-    elif method == 12:
-        selector = 'SelectKBest(fisher_score, k=%d)' % n_feat
+        selector = fisher_score
     else:
         selector = None
     assert selector is not None
@@ -303,24 +304,16 @@ def get_method_name(method: int) -> str:
     elif method == 4:
         return "Mutual Information"
     elif method == 5:
-        return "Kolmogorov–Smirnov Test with Correlation Penalty"
-    elif method == 6:
         return "Sum of Areas Under ROC curve"
-    elif method == 7:
+    elif method == 6:
         return "Multiplication of Areas Under ROC curve"
-    elif method == 8:
-        return "Sum of Areas Under ROC curve with Correlation Penalty"
-    elif method == 9:
-        return "Multiplication of Areas Under ROC curve with Correlation Penalty"
-    elif method == 10:
+    elif method == 7:
         return "AUC-KS-Chi2 normalized multiplication"
-    elif method == 11:
-        return "AUC-KS-Chi2 normalized multiplication with Correlation Penalty"
-    elif method == 12:
+    elif method == 8:
         return "Fisher Score"
-    elif method == 13:
+    elif method == 9:
         return "Principal Component Analysis"
-    elif method == 14:
+    elif method == 10:
         return "Linear Discrimant Analysis"
 
 

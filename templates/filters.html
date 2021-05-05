@@ -109,6 +109,9 @@
 
             let threshold = document.getElementById("threshold").value
 
+            let corr_penalty = $('#corr_penalty').is(":checked");
+            corr_penalty = corr_penalty? "True" : "False";
+
             let input = document.createElement("input")
             input.setAttribute("type", "hidden")
             input.setAttribute("name", "methods[]")
@@ -121,6 +124,11 @@
             input3.setAttribute("type", "hidden")
             input3.setAttribute("name", "thresholds[]")
             input3.setAttribute("value", threshold)
+
+            let input4 = document.createElement("input")
+            input4.setAttribute("type", "hidden")
+            input4.setAttribute("name", "corr_penalties[]")
+            input4.setAttribute("value", corr_penalty)
 
             let selector = document.getElementById("selector");
             let new_item = document.createElement("div");
@@ -135,12 +143,13 @@
             if (method == 0) {
                 item_content.appendChild(document.createTextNode(label + " (" + threshold + ") => " + quantity))
             } else {
-                item_content.appendChild(document.createTextNode(label + " => " + quantity))
+                item_content.appendChild(document.createTextNode(label + " => " + quantity + ", corr_penalty = " + corr_penalty))
             }
             new_item.appendChild(item_content)
             new_item.appendChild(input)
             new_item.appendChild(input2)
             new_item.appendChild(input3)
+            new_item.appendChild(input4)
             selector.appendChild(new_item)
 
             // update selector
@@ -274,7 +283,7 @@
             if (lda === true) {
                 n_feat_selector.max = max_feat
             } else {
-                n_feat_selector.max = 91
+                n_feat_selector.max = 1000
             }
         }
 
@@ -343,7 +352,7 @@
             <div style="width: 33%">
                 <input class="form-check-input" type="radio" id="method0" name="method" value="0" checked
                        onchange="fix_max_features();">
-                <label class="form-check-label" for="method0">Remove Correlated Features with a Threshold <span style="font-size:xx-small">(may lead to bugs in classification phase)</span></label><br>
+                <label class="form-check-label" for="method0">Remove Correlated Features with a Threshold <span style="font-size:xx-small">(may lead to bugs in classifer stacking phase)</span></label><br>
                 <h4>Select K Best Methods</h4>
 
                 <input class="form-check-input" type="radio" id="method1" name="method" value="1" onchange="fix_max_features();">
@@ -354,33 +363,29 @@
                 <label class="form-check-label" for="method3">Kolmogorov–Smirnov Test</label><br>
                 <input class="form-check-input" type="radio" id="method4" name="method" value="4" onchange="fix_max_features();">
                 <label class="form-check-label" for="method4">Mutual Information</label><br>
-                <input class="form-check-input" type="radio" id="method5" name="method" value="5" onchange="fix_max_features();">
-                <label class="form-check-label" for="method5">Kolmogorov–Smirnov Test with Correlation Penalty</label><br>
-                <input class="form-check-input" type="radio" id="method6" name="method" value="6" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method6" name="method" value="5" onchange="fix_max_features();">
                 <label class="form-check-label" for="method6">Sum of Areas Under ROC curve</label><br>
-                <input class="form-check-input" type="radio" id="method7" name="method" value="7" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method7" name="method" value="6" onchange="fix_max_features();">
                 <label class="form-check-label" for="method7">Multiplication of Areas Under ROC curve</label><br>
-                <input class="form-check-input" type="radio" id="method8" name="method" value="8" onchange="fix_max_features();">
-                <label class="form-check-label" for="method8">Sum of Areas Under ROC curve with Correlation Penalty</label><br>
-                <input class="form-check-input" type="radio" id="method9" name="method" value="9" onchange="fix_max_features();">
-                <label class="form-check-label" for="method9">Multiplication of Areas Under ROC curve with Correlation Penalty</label><br>
-                <input class="form-check-input" type="radio" id="method10" name="method" value="10" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method10" name="method" value="7" onchange="fix_max_features();">
                 <label class="form-check-label" for="method10">AUC-KS-Chi2 Normalized Multiplication</label><br>
-                <input class="form-check-input" type="radio" id="method11" name="method" value="11" onchange="fix_max_features();">
-                <label class="form-check-label" for="method11">AUC-KS-Chi2 Normalized Multiplication with Correlation Penalty</label><br>
-                <input class="form-check-input" type="radio" id="method12" name="method" value="12" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method12" name="method" value="8" onchange="fix_max_features();">
                 <label class="form-check-label" for="method12">Fisher Score</label><br>
                 <h4>Reduction Filters</h4>
-                <input class="form-check-input" type="radio" id="method13" name="method" value="13" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method13" name="method" value="9" onchange="fix_max_features();">
                 <label class="form-check-label" for="method13">Principal Component Analysis</label><br>
-                <input class="form-check-input" type="radio" id="method14" name="method" value="14" onchange="fix_max_features();">
+                <input class="form-check-input" type="radio" id="method14" name="method" value="10" onchange="fix_max_features();">
                 <label class="form-check-label" for="method14">Linear Discrimant Analysis</label><br>
+
                 <h4>Filter Parameters</h4>
                 <label for="quantity">Remaining features after filter:</label>
                 <input type="number" id="quantity" name="quantity" min="1" value="5"><br>
 
                 <label for="threshold">Correlation threshold (remove correlated only):</label>
-                <input type="number" id="threshold" name="threshold" min="0" max="1" step="0.005" value="0.9">
+                <input type="number" id="threshold" name="threshold" min="0" max="1" step="0.005" value="0.9"><br>
+
+                <label for="corr_penalty">Use correlation penalty:</label>
+                <input type="checkbox" id="corr_penalty" name="corr_penalty">
             </div>
 
             <div style="width: 5%">
@@ -394,12 +399,13 @@
                             {% if fil.method == 0 %}
                                 <span class="order">{{ forloop.counter }}. </span>remove correlated ({{ fil.threshold }}) => {{ fil.n_feat }}
                             {% else %}
-                                <span class="order">{{ forloop.counter }}. </span>{{ fil.name }} => {{ fil.n_feat }}
+                                <span class="order">{{ forloop.counter }}. </span>{{ fil.name }} => {{ fil.n_feat }}, corr_penalty = {{ fil.corr_penalty }}
                             {% endif %}
                         </div>
                         <input type="hidden" name="methods[]" value="{{ fil.method }}">
                         <input type="hidden" name="quantities[]" value="{{ fil.n_feat }}">
                         <input type="hidden" name="thresholds[]" value="{{ fil.threshold }}">
+                        <input type="hidden" name="corr_penalties[]" value="{{ fil.corr_penalty }}">
                     </div>
                 {% endfor %}
             </div>
