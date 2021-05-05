@@ -280,18 +280,12 @@
                 validation = `${validation_method}(n_splits=${n_splits})`
             }
 
-            let scenario = $('input[name="scenario"]:checked').val();
-            let gadget = $('input[name="gadget"]:checked').val();
-            let instrument = $('input[name="instrument"]:checked').val();
 
             $.ajax({
                 type: "GET",
                 url: "analyse_classifiers",
                 dataType: "json",
                 data: {
-                    "scenario": scenario,
-                    "gadget": gadget,
-                    "instrument": instrument,
                     "model": classifier,
                     "validation_method": validation
                 },
