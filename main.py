@@ -20,7 +20,7 @@ def main():
     gadget = "phone"
     instrument = "accel"
     # load data
-    X, y = get_data(scenario, gadget, instrument)
+    X, y = get_data()
     # choose features
     X, y = feature_filtering(X, y, n_feat=3, method=1, threshold=0.9)
     # plot_features(X, y, interactive=False, n_feat=3)

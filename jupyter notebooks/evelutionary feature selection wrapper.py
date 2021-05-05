@@ -110,7 +110,7 @@ def run(pop_size, n_generations, X, y, elitism=0.02, tournament_size=0.1, divers
 
 if __name__ == "__main__":
     os.chdir("..")
-    X, y = get_data("c", "phone", "accel")
+    X, y = get_data()
     best, gen = run(91, 50, X, y, verbose=True)
     print("Found best individual at generation %d with fitness %f" % (gen, best[1]))
     print(best)

@@ -254,7 +254,7 @@
                 case "RandomForestClassifier":
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
                     let bootstrap = $('#randomf-bootstrap').is(":checked");
-                    bootstrap = bootstrap == "true" ? "True" : "False";
+                    bootstrap = bootstrap ? "True" : "False";
                     let n_estimators = $('input[name="n_estimators"]').val();
                     classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
                     break;
@@ -262,10 +262,8 @@
                     let C = $('input[name="C"]').val();
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
-                    let n_estimators_svm = $('input[name="n_estimators_svm"]').val();
-                    let max_samples = 1.0 / n_estimators_svm;
-                    classifier = `OneVsRestClassifier(BaggingClassifier(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), max_samples=${max_samples}, n_estimators=${n_estimators_svm}))`;
-
+                    let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
+                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
                     break;
                 default:
                     classifier = `${selected}()`;
@@ -322,7 +320,7 @@
                 case "RandomForestClassifier":
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
                     let bootstrap = $('#randomf-bootstrap').is(":checked");
-                    bootstrap = bootstrap == "true" ? "True" : "False";
+                    bootstrap = bootstrap? "True" : "False";
                     let n_estimators = $('input[name="n_estimators"]').val();
                     classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
                     break;
@@ -330,10 +328,8 @@
                     let C = $('input[name="C"]').val();
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
-                    let n_estimators_svm = $('input[name="n_estimators_svm"]').val();
-                    let max_samples = 1.0 / n_estimators_svm;
-                    classifier = `OneVsRestClassifier(BaggingClassifier(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), max_samples=${max_samples}, n_estimators=${n_estimators_svm}))`;
-
+                    let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
+                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
                     break;
                 default:
                     classifier = `${selected}()`;
@@ -374,45 +370,7 @@
 
 <div style="width: 100%; margin-left: 8px; height: 93%; overflow-y: scroll;">
     <form action="classifiers">
-        <table class="table" style="width: 85%">
-            <tr>
-                <th>Scenario</th>
-                <th>Gadget</th>
-                <th>Instrument</th>
-            </tr>
-            <tr>
-                <td>
-                    <div>
-                        <input class="form-check-input" type="radio" id="A" name="scenario" value="A" {% if request.GET.scenario == "A" %}  checked {% endif %}>
-                        <label class="form-check-label" for="A">A</label>
-                        <input class="form-check-input" type="radio" id="B" name="scenario" value="B" {% if not request.GET.scenario or request.GET.scenario == "B" %}  checked {% endif %}>
-                        <label class="form-check-label" for="B">B</label>
-                        <input class="form-check-input" type="radio" id="C" name="scenario" value="C" {% if request.GET.scenario == "C" %}  checked {% endif %}>
-                        <label class="form-check-label" for="C">C</label>
-                    </div>
-                </td>
-                <td>
-                    <div>
-                        <input type="radio" id="phone" name="gadget" value="phone"{% if not request.GET.gadget or request.GET.gadget == "phone" %}  checked {% endif %}>
-                        <label for="phone">Phone</label>&nbsp;&nbsp;
-                        <input type="radio" id="watch" name="gadget" value="watch"{% if request.GET.gadget == "watch" %} checked {% endif %}>
-                        <label for="watch">Watch</label>&nbsp;&nbsp;
-                    </div>
-                </td>
-
-                <td>
-                    <div>
-                        <input type="radio" id="accel" name="instrument" value="accel"
-                                {% if not request.GET.instrument or request.GET.instrument == "accel" %}
-                               checked {% endif %}>
-                        <label for="accel">Accelerometer</label>&nbsp;&nbsp;
-                        <input type="radio" id="gyro" name="instrument" value="gyro"
-                                {% if request.GET.instrument == "gyro" %}  checked {% endif %}>
-                        <label for="gyro">Gyroscope</label>&nbsp;&nbsp;
-                    </div>
-                </td>
-            </tr>
-        </table>
+        Using dataset: {{ data_set_name }}
         {% comment %}scenario selection{% endcomment %}
         <div style="display: flex; width: 100%; height: 350px">
             {% comment %}load a filter pipeline{% endcomment %}
@@ -499,14 +457,7 @@
                 </div>
                 <div id="svm-params" style="display: none">
                     <div style="width: 50%">
-                        To avoid long validation time issues, SVC is always trained as a Bagging ensemble with at least 5 and no more than 50 estimators.<br>
-                        For the same reason, linear or polynomial kernels are recommended.<br>
-                        This may still take a few minutes to load.<br>
                     </div>
-
-
-                    <label for="n_estimators_svm">Number of Bagging Estimators:</label>
-                    <input type="number" id="n_estimators_svm" name="n_estimators_svm" min="5" max="50" step="1" value="10"><br>
 
                     <label for="C">C:</label>
                     <input type="number" id="C" name="C" min="0.25" max="4" step="0.25" value="1"><br>
@@ -525,6 +476,12 @@
                         <label for="degree">Degree:</label>
                         <input type="number" id="degree" name="degree" min="2" max="10" step="1" value="3"><br>
                     </div>
+
+                    <label>Multiclass Strategy:</label>
+                    <input type="radio" id="svm-multiclass-ovr" name="svm-multiclass" value="OneVsRestClassifier" onclick="load_param_selectors()" checked>
+                    <label for="svm-multiclass-ovr">One Vs Rest</label>
+                    <input type="radio" id="svm-multiclass-ovo" name="svm-multiclass" value="OneVsOneClassifier" onclick="load_param_selectors()">
+                    <label for="svm-multiclass-ovo">One Vs One</label>
 
 
                 </div>

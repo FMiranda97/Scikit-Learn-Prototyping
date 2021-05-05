@@ -31,6 +31,13 @@
     <a class="navbar-brand" href="/help">Help</a>
 </nav>
 
-Welcome :)
+Upload your Dataset here:
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" id="file1" name="file">
+    <small>Only accepts CSV files, column for classification should be named "state"</small>
+    <button type="submit">Upload</button>
+</form>
+
 </body>
 </html>

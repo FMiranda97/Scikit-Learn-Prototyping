@@ -85,8 +85,7 @@
                 <ul>
                     <li><a href="#create_a_classifier">3.1 How do I create a classifier?</a></li>
                     <li><a href="#know_if_it_is_any_good">3.2 I created a classification model, but how do I know if it is any good?</a></li>
-                    <li><a href="#SVC">3.3 Support Vector Machine Classifier (SVC)</a></li>
-                    <li><a href="#stacking">3.4 Classifier Stacking</a></li>
+                    <li><a href="#stacking">3.3 Classifier Stacking</a></li>
                 </ul>
             </li>
         </ul>
@@ -297,18 +296,9 @@
                 If your metrics variation is high you can try increasing the number of repetitions in K-Fold or the number of splits in Shuffled Split, but beware this will make analysis take longer.
             </p>
         </span>
-        <h3 id="SVC">3.3 Support Vector Machine Classifier (SVC)</h3>
-        <span>
-            <p>
-                To avoid long validation time issues due to quadratic or worse training and scoring complexity, SVC is always trained as a Bagging ensemble with at least 5 and no more than 50 estimators.
-                For the same reason, linear or polynomial kernels are recommended.
-            </p>
-            <p>
-                This may still take a few minutes to load and it is therefore also <strong>recommended to not use repetitions on cross validation for this method</strong>.
-            </p>
-        </span>
 
-        <h3 id="stacking">3.4 Classifier Stacking</h3>
+
+        <h3 id="stacking">3.3 Classifier Stacking</h3>
         <span>
             <p>
                 Once you have created and analysed multiple classifiers, you may still not be satisfied with the quality of your models.

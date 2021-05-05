@@ -12,6 +12,15 @@ import matplotlib.pyplot as plt
 
 def index(request):
     template = loader.get_template('index.html')
+    if request.method == "GET":
+        return HttpResponse(template.render({}, request))
+
+    csv_file = request.FILES['file']
+    # let's check if it is a csv file
+    data_set = csv_file.read().decode('UTF-8')
+    request.session['data_set'] = data_set
+    request.session['data_set_name'] = request.FILES['file'].name
+
     return HttpResponse(template.render({}, request))
 
 
@@ -38,11 +47,8 @@ def save_filter(request):
 
 
 def load_filter(request):
-    scenario = request.GET["scenario"]
-    gadget = request.GET["gadget"]
-    instrument = request.GET["instrument"]
     loaded_filter = FilterSet.objects.filter(id=request.GET.get('load'))[0]
-    return analyse_filters(eval(loaded_filter.info), request, scenario, gadget, instrument)
+    return analyse_filters(eval(loaded_filter.info), request)
 
 
 def get_filter_info_from_request(request):
@@ -57,14 +63,13 @@ def get_filter_info_from_request(request):
             'n_feat': n_feat,
             'threshold': threshold,
             'name': get_method_name(method)
-        } for i, (method, n_feat, threshold) in
-        enumerate(zip(filter_info['filters'], filter_info['filter_sizes'], filter_info['thresholds']))
+        } for i, (method, n_feat, threshold) in enumerate(zip(filter_info['filters'], filter_info['filter_sizes'], filter_info['thresholds']))
     }
     return filter_info
 
 
-def analyse_filters(filter_info, request, scenario, gadget, instrument):
-    X, y = get_data(scenario, gadget, instrument)
+def analyse_filters(filter_info, request):
+    X, y = get_data(request.session.get('data_set', ''))
     classes, counts = np.unique(y, return_counts=True)
     y_count = dict(zip(classes, counts))
     post_filter = [
@@ -111,13 +116,9 @@ def analyse_filters(filter_info, request, scenario, gadget, instrument):
         post_filter[-1]["uris"] = uris
 
     # render
-    gadget = "Phone" if gadget.lower() == "phone" else "Watch"
-    instrument = "Accelerometer" if instrument.lower() == "accel" else "Gyroscope"
     context = {
         'filters_info': filter_info,
         'scenario': {
-            'gadget': gadget,
-            'instrument': instrument,
             'n_classes': len(classes),
             'n_feat': len(X.columns),
             'y_count': y_count,
@@ -136,6 +137,7 @@ def analyse_filters(filter_info, request, scenario, gadget, instrument):
         } for filterSet in all_saved_filters
     ]
     context['saved_filters'] = saved_filters
+    context['data_set_name'] = request.session.get('data_set_name', 'No Dataset Selected. Go to welcome page')
     return HttpResponse(template.render(context, request))
 
 
@@ -153,15 +155,13 @@ def filters(request):
             } for filterSet in all_saved_filters
         ]
         try:
-            scenario = request.GET["scenario"]
-            gadget = request.GET["gadget"]
-            instrument = request.GET["instrument"]
             filter_info = get_filter_info_from_request(request)
-            return analyse_filters(filter_info, request, scenario, gadget, instrument)
+            return analyse_filters(filter_info, request)
         except:
             context = eval(request.session.get('most_recent_filters_report', '{}'))
             template = loader.get_template('filters.html')
             context['saved_filters'] = saved_filters
+            context['data_set_name'] = request.session.get('data_set_name', 'No Dataset Selected. Go to welcome page')
             return HttpResponse(template.render(context, request))
 
 
@@ -187,7 +187,8 @@ def classifiers(request):
     ]
     context = {
         'saved_filters': saved_filters,
-        'filters_info': filter_info
+        'filters_info': filter_info,
+        'data_set_name': request.session.get('data_set_name', 'No Dataset Selected. Go to welcome page')
     }
     return HttpResponse(template.render(context, request))
 
@@ -212,10 +213,7 @@ def save_classifier(request):
 
 
 def analyse_classifiers(request):
-    scenario = request.GET["scenario"]
-    gadget = request.GET["gadget"]
-    instrument = request.GET["instrument"]
-    X, y = get_data(scenario, gadget, instrument)
+    X, y = get_data(request.session.get('data_set', ''))
     filter_info = request.session.get('loaded_class_filters', {})
     for i, fil in filter_info.items():
         if fil['method'] == 0:
@@ -248,16 +246,15 @@ def classifierstacks(request):
                 "name": c.name,
                 "model": c.model
             } for c in Classifier.objects.all()
-        ]
+        ],
+        'data_set_name': request.session.get('data_set_name', 'No Dataset Selected. Go to welcome page')
     }
+
     return HttpResponse(template.render(context, request))
 
 
 def analyse_stack(request):
-    scenario = request.GET["scenario"]
-    gadget = request.GET["gadget"]
-    instrument = request.GET["instrument"]
-    X, y = get_data(scenario, gadget, instrument)
+    X, y = get_data(request.session.get('data_set', ''))
 
     model = request.GET['model']
     validation_splitter = request.GET['validation_method']
