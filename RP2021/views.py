@@ -54,7 +54,7 @@ def load_filter(request):
 def get_filter_info_from_request(request):
     filter_info = {
         'filters': [int(x) for x in request.GET.getlist("methods[]")],
-        'filter_sizes': [int(x) for x in request.GET.getlist("quantities[]")],
+        'filter_sizes': [eval(x) for x in request.GET.getlist("quantities[]")],
         'thresholds': [float(x) for x in request.GET.getlist("thresholds[]")],
         'corr_penalties': [True if x == "True" else False for x in request.GET.getlist("corr_penalties[]")]
     }
@@ -105,7 +105,7 @@ def analyse_filters(filter_info, request):
         else:
             X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 8)
             post_filter.append({
-                "title": "%d. %s => %d features" % (i + 1, get_method_name(fil['method']), fil['n_feat']),
+                "title": "%d. %s => %d features" % (i + 1, get_method_name(fil['method']), X.shape[1]),
                 "n_feat": fil['n_feat'],
                 "feat_table": feature_analysis(X, y),
                 "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
@@ -177,7 +177,7 @@ def classifiers(request):
         filter_info = get_filter_by_id(request)
         request.session['loaded_class_filters'] = filter_info
     else:
-        filter_info = eval(request.session.get('most_recent_filters', '{}'))
+        filter_info = {}
 
     template = loader.get_template('classifiers.html')
     all_saved_filters = FilterSet.objects.all()

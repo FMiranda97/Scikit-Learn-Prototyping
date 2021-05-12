@@ -190,7 +190,7 @@ def auc_classif(X: pd.DataFrame, y: np.ndarray, aggregate_func=sum) -> np.ndarra
     y = label_binarize(y, classes=np.unique(y))
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=0)
     for feat in range(n_feat):
-        clf = OneVsRestClassifier(LinearSVC(random_state=0))
+        clf = OneVsRestClassifier(LinearSVC())
         y_score = clf.fit(X_train[:, feat].reshape(-1, 1), y_train).decision_function(X_test[:, feat].reshape(-1, 1))
         roc_auc = []
         if n_classes <= 2:
@@ -246,10 +246,14 @@ def multi_stats_classif_correlation_penalty(X: pd.DataFrame, y: np.ndarray, pena
 
 def general_classif(classif: callable = ks_classif, corr_penalty=False, penalty_coefficient: float = 2) -> ():
     def classif_func(X: pd.DataFrame, y: np.ndarray):
-        scores, pvalues = classif(X, y)
+        results = classif(X, y)
+        if type(results) is tuple:
+            scores = results[0]
+        else:
+            scores = results
         if corr_penalty:
             scores = correlation_penalty(X, scores, penalty_coefficient=penalty_coefficient)
-        return np.array(scores), np.array(pvalues)
+        return np.array(scores)
 
     return classif_func
 
