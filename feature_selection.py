@@ -2,6 +2,9 @@ import base64
 import io
 import urllib
 from typing import *
+
+from sklearn import linear_model
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
@@ -23,6 +26,7 @@ import matplotlib.lines as mlines
 
 import seaborn
 from mpl_toolkits.mplot3d import Axes3D  # unused import, but necessary to activate some 3d plot thingy
+from sklearn.tree import DecisionTreeClassifier
 
 
 def plot_correlation(X: pd.DataFrame):
@@ -190,7 +194,7 @@ def auc_classif(X: pd.DataFrame, y: np.ndarray, aggregate_func=sum) -> np.ndarra
     y = label_binarize(y, classes=np.unique(y))
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=0)
     for feat in range(n_feat):
-        clf = OneVsRestClassifier(LinearSVC())
+        clf = OneVsRestClassifier(LogisticRegression())
         y_score = clf.fit(X_train[:, feat].reshape(-1, 1), y_train).decision_function(X_test[:, feat].reshape(-1, 1))
         roc_auc = []
         if n_classes <= 2:

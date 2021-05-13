@@ -92,7 +92,7 @@ def analyse_filters(filter_info, request):
                 "feat_table": feature_analysis(X, y),
                 "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
             })
-        elif fil['method'] < 8:
+        elif fil['method'] < 9:
             X, y, scores = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'], corr_penalty=fil['corr_penalty'])
             post_filter.append({
                 "title": "%d. %s => %d features, corr_penalty = %s" % (i + 1, get_method_name(fil['method']), fil['n_feat'], fil['corr_penalty']),
