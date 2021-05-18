@@ -73,7 +73,7 @@ def perclass_sens_spec(model, X, y):
 def classifier_validation(X, y, model, validation_splitter):
     model = eval(model)
     validation_splitter = eval(validation_splitter)
-    scores = cross_validate(model, X, y, cv=validation_splitter, scoring=['accuracy', 'f1_macro', 'precision_macro', 'recall_macro'], n_jobs=-1)
+    scores = cross_validate(model, X, y, cv=validation_splitter, scoring=['accuracy', 'f1_micro', 'precision_micro', 'recall_micro'], n_jobs=-1)
     scores = {k: (np.mean(v) * 100, np.std(v) * 100) for k, v in scores.items()}
     sens_spec = perclass_sens_spec(model, X, y)
     y_pred = cross_val_predict(model, X, y, cv=StratifiedKFold(n_splits=5), n_jobs=-1)
