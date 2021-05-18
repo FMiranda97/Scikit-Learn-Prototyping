@@ -201,9 +201,9 @@ def save_classifier(request):
     for i, fil in filter_info.items():
         if fil['method'] == 0:
             pipeline_steps.append('FunctionTransformer(filter_correlated, kw_args={\'threshold\': %f, \'limit\':%d})' % (fil['threshold'], fil['n_feat']))
-        elif fil['method'] < 12:
-            filter_model = 'SelectKBest(general_classif(classif=%s, corr_penalty=%s), k=%d)' % (get_feature_filtering_model(fil['method']), fil['corr_penalty'], fil['n_feat'])
-            pipeline_steps.append(filter_model) # TODO
+        elif fil['method'] < 9:
+            filter_model = 'SelectKBest(general_classif(classif=%s, corr_penalty=%s), k=%d)' % (get_feature_filtering_model(fil['method']).__name__, fil['corr_penalty'], fil['n_feat'])
+            pipeline_steps.append(filter_model)  # TODO
         else:
             pipeline_steps.append(str(get_feature_reduction_model(fil['method'] - 8, fil['n_feat'])))
     model = request.GET['model']
