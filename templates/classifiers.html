@@ -263,7 +263,12 @@
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
                     let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
-                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    if (mc_strategy === "OutputCodeClassifier") {
+                        let outputcode_size = $('input[name="outputcode_size"]').val();
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), code_size = ${outputcode_size})`
+                    } else {
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    }
                     break;
                 default:
                     classifier = `${selected}()`;
@@ -279,6 +284,11 @@
             } else {
                 validation = `${validation_method}(n_splits=${n_splits})`
             }
+            if ($('#use_outputcode').is(":checked") && selected != "SVC") {
+                let outputcode_size = $('input[name="outputcode_size"]').val();
+                classifier = `OutputCodeClassifier(${classifier}, code_size=${outputcode_size})`;
+            }
+            alert(classifier);
 
 
             $.ajax({
@@ -314,7 +324,7 @@
                 case "RandomForestClassifier":
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
                     let bootstrap = $('#randomf-bootstrap').is(":checked");
-                    bootstrap = bootstrap? "True" : "False";
+                    bootstrap = bootstrap ? "True" : "False";
                     let n_estimators = $('input[name="n_estimators"]').val();
                     classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
                     break;
@@ -323,12 +333,24 @@
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
                     let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
-                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    if ($('#use_outputcode').is(":checked")) {
+                        let outputcode_size = $('input[name="outputcode_size"]').val();
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), code_size = ${outputcode_size})`
+                    } else {
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    }
+
                     break;
                 default:
                     classifier = `${selected}()`;
                     break;
             }
+
+            if ($('#use_outputcode').is(":checked") && selected != "SVC") {
+                let outputcode_size = $('input[name="outputcode_size"]').val();
+                classifier = `OutputCodeClassifier(${classifier}, code_size=${outputcode_size})`;
+            }
+            alert(classifier);
 
             $.ajax({
                 type: "GET",
@@ -419,10 +441,16 @@
                 <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
                 <label class="form-check-label" for="svm">SVC</label><br>
                 <h4 id="params-header" style="display: none">Classifier Parameters</h4>
+
+                <label for="use_outputcode">Use OutputCodeClassifier:</label>
+                <input type="checkbox" id="use_outputcode" name="use_outputcode"><br>
+                <label for="outputcode_size">Output code size:</label>
+                <input type="number" id="outputcode_size" name="outputcode_size" min="1.5" step="0.5" value="1.5">
+
+
                 <div id="knn-params" style="display: none">
                     <label for="n_neighbors">Number of Neighbors:</label>
                     <input type="number" id="n_neighbors" name="n_neighbors" min="1" max="100" value="5"><br>
-
                     <label>Weights:</label>
                     <input type="radio" id="knn-uniform" name="knn-weights" value="uniform" checked>
                     <label for="knn-uniform">uniform</label>
@@ -476,6 +504,8 @@
                     <label for="svm-multiclass-ovr">One Vs Rest</label>
                     <input type="radio" id="svm-multiclass-ovo" name="svm-multiclass" value="OneVsOneClassifier" onclick="load_param_selectors()">
                     <label for="svm-multiclass-ovo">One Vs One</label>
+                    <input type="radio" id="svm-multiclass-out" name="svm-multiclass" value="OutputCodeClassifier" onclick="load_param_selectors()">
+                    <label for="svm-multiclass-out">OutputCode</label>
 
 
                 </div>
@@ -502,9 +532,10 @@
             </label><br>
             <div id="cross_val_repetitions">
                 <label>repetitions:
-                <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
-            </label>
-            </div><br>
+                    <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
+                </label>
+            </div>
+            <br>
 
             <input type="button" class="btn btn-primary" onclick="classifierAnalysis()" value="Analyse Classifier">
             <input type="button" class="btn btn-primary" onclick="classifierSaving()" value="Save Classifier">
