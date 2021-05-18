@@ -221,7 +221,7 @@ def analyse_classifiers(request):
     for i, fil in filter_info.items():
         if fil['method'] == 0:
             X = filter_correlated(X, threshold=fil['threshold'], limit=fil['n_feat'])
-        elif fil['method'] < 8:
+        elif fil['method'] < 9:
             X, y, _ = feature_filtering(X, y, n_feat=fil['n_feat'], method=fil['method'], corr_penalty=fil['corr_penalty'])
         else:
             X, y = feature_reduction(X, y, n_feat=fil['n_feat'], method=fil['method'] - 8)

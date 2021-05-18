@@ -269,6 +269,9 @@ def feature_filtering(X: pd.DataFrame, y: np.ndarray, n_feat: int = 3, method: i
     else:
         return X, y, {}
     selector = selector.fit(X, y)
+    for i, v in enumerate(selector.scores_):
+        if np.isnan(v):
+            selector.scores_[i] = 0
     scores = {X.columns[i]: score for i, score in enumerate(selector.scores_)}
     scores = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
     X_new = selector.transform(X)
