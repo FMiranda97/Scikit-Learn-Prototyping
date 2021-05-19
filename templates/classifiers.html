@@ -189,6 +189,7 @@
             let knn = document.getElementById("knn-params");
             let dt = document.getElementById("dt-params");
             let randomf = document.getElementById("randomf-params");
+            let extratree = document.getElementById("extratree-params");
             let svc = document.getElementById("svm-params");
             let params_header = document.getElementById("params-header");
 
@@ -203,6 +204,7 @@
             knn.style.display = "none";
             dt.style.display = "none";
             randomf.style.display = "none";
+            extratree.style.display = "none";
             svc.style.display = "none";
             params_header.style.display = "block";
             document.getElementById("general_options").style.display = "block";
@@ -215,6 +217,9 @@
                     break;
                 case "RandomForestClassifier":
                     randomf.style.display = "block";
+                    break;
+                case "ExtraTreesClassifier":
+                    extratree.style.display = "block";
                     break;
                 case "SVC":
                     svc.style.display = "block";
@@ -253,17 +258,29 @@
                     break;
                 case "RandomForestClassifier":
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
-                    let bootstrap = $('#randomf-bootstrap').is(":checked");
-                    bootstrap = bootstrap ? "True" : "False";
-                    let n_estimators = $('input[name="n_estimators"]').val();
-                    classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
+                    let randomfbootstrap = $('#randomf-bootstrap').is(":checked");
+                    randomfbootstrap = randomfbootstrap ? "True" : "False";
+                    let randomfn_estimators = $('input[name="randomf-n_estimators"]').val();
+                    classifier = `RandomForestClassifier(n_estimators=${randomfn_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${randomfbootstrap})`;
+                    break;
+                case "ExtraTreesClassifier":
+                    let extratreecriterion = $('input[name="extratree-criterion"]:checked').val();
+                    let extratreebootstrap = $('#extratree-bootstrap').is(":checked");
+                    extratreebootstrap = extratreebootstrap ? "True" : "False";
+                    let extratreen_estimators = $('input[name="extratree-n_estimators"]').val();
+                    classifier = `ExtraTreesClassifier(n_estimators=${extratreen_estimators}, criterion=\'${extratreecriterion}\', bootstrap=${extratreebootstrap})`;
                     break;
                 case "SVC":
                     let C = $('input[name="C"]').val();
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
                     let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
-                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    if (mc_strategy === "OutputCodeClassifier") {
+                        let outputcode_size = $('input[name="outputcode_size"]').val();
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), code_size = ${outputcode_size})`
+                    } else {
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    }
                     break;
                 default:
                     classifier = `${selected}()`;
@@ -278,6 +295,10 @@
                 validation = `${validation_method}(n_splits=${n_splits}, n_repeats=${n_repeats})`
             } else {
                 validation = `${validation_method}(n_splits=${n_splits})`
+            }
+            if ($('#use_outputcode').is(":checked") && selected != "SVC") {
+                let outputcode_size = $('input[name="outputcode_size"]').val();
+                classifier = `OutputCodeClassifier(${classifier}, code_size=${outputcode_size})`;
             }
 
 
@@ -314,20 +335,38 @@
                 case "RandomForestClassifier":
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
                     let bootstrap = $('#randomf-bootstrap').is(":checked");
-                    bootstrap = bootstrap? "True" : "False";
+                    bootstrap = bootstrap ? "True" : "False";
                     let n_estimators = $('input[name="n_estimators"]').val();
                     classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
+                    break;
+                case "ExtraTreesClassifier":
+                    let extratreecriterion = $('input[name="extratree-criterion"]:checked').val();
+                    let extratreebootstrap = $('#extratree-bootstrap').is(":checked");
+                    extratreebootstrap = extratreebootstrap ? "True" : "False";
+                    let extratreen_estimators = $('input[name="extratree-n_estimators"]').val();
+                    classifier = `ExtraTreesClassifier(n_estimators=${extratreen_estimators}, criterion=\'${extratreecriterion}\', bootstrap=${extratreebootstrap})`;
                     break;
                 case "SVC":
                     let C = $('input[name="C"]').val();
                     let kernel = $('input[name="kernel"]:checked').val()
                     let degree = $('input[name="degree"]').val();
                     let mc_strategy = $('input[name="svm-multiclass"]:checked').val()
-                    classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    if ($('#use_outputcode').is(":checked")) {
+                        let outputcode_size = $('input[name="outputcode_size"]').val();
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}), code_size = ${outputcode_size})`
+                    } else {
+                        classifier = `${mc_strategy}(SVC(kernel=\'${kernel}\', C=${C}, degree=${degree}))`;
+                    }
+
                     break;
                 default:
                     classifier = `${selected}()`;
                     break;
+            }
+
+            if ($('#use_outputcode').is(":checked") && selected != "SVC") {
+                let outputcode_size = $('input[name="outputcode_size"]').val();
+                classifier = `OutputCodeClassifier(${classifier}, code_size=${outputcode_size})`;
             }
 
             $.ajax({
@@ -402,27 +441,48 @@
                 <h4>Select a Classifier</h4>
                 <input class="form-check-input" type="radio" id="mdc" name="method" value="MDC" onclick="load_param_selectors()" checked>
                 <label class="form-check-label" for="mdc">Minimum Distance Classifier</label><br>
+
                 <input class="form-check-input" type="radio" id="perceptron" name="method" value="Perceptron" onclick="load_param_selectors()">
                 <label class="form-check-label" for="perceptron">Perceptron</label><br>
+
                 <input class="form-check-input" type="radio" id="lda" name="method" value="LinearDiscriminantAnalysis" onclick="load_param_selectors()">
                 <label class="form-check-label" for="lda">Linear Discriminant Analysis</label><br>
+
                 <input class="form-check-input" type="radio" id="qda" name="method" value="QuadraticDiscriminantAnalysis" onclick="load_param_selectors()">
                 <label class="form-check-label" for="qda">Quadratic Discriminant Analysis</label><br>
+
                 <input class="form-check-input" type="radio" id="knn" name="method" value="KNeighborsClassifier" onclick="load_param_selectors()">
                 <label class="form-check-label" for="knn">K-Nearest Neighbors</label><br>
+
                 <input class="form-check-input" type="radio" id="dt" name="method" value="DecisionTreeClassifier" onclick="load_param_selectors()">
                 <label class="form-check-label" for="dt">Decision Tree</label><br>
+
                 <input class="form-check-input" type="radio" id="randomf" name="method" value="RandomForestClassifier" onclick="load_param_selectors()">
                 <label class="form-check-label" for="randomf">Random Forest</label><br>
+
+                <input class="form-check-input" type="radio" id="extratrees" name="method" value="ExtraTreesClassifier" onclick="load_param_selectors()">
+                <label class="form-check-label" for="extratrees">Extra Trees</label><br>
+
                 <input class="form-check-input" type="radio" id="bayes" name="method" value="GaussianNB" onclick="load_param_selectors()">
                 <label class="form-check-label" for="bayes">GaussianNB</label><br>
+
                 <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
                 <label class="form-check-label" for="svm">SVC</label><br>
+
+                <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
+                <label class="form-check-label" for="svm">SVC</label><br>
+
                 <h4 id="params-header" style="display: none">Classifier Parameters</h4>
+
+                <label for="use_outputcode">Use OutputCodeClassifier:</label>
+                <input type="checkbox" id="use_outputcode" name="use_outputcode"><br>
+                <label for="outputcode_size">Output code size:</label>
+                <input type="number" id="outputcode_size" name="outputcode_size" min="1.5" step="0.5" value="1.5">
+
+
                 <div id="knn-params" style="display: none">
                     <label for="n_neighbors">Number of Neighbors:</label>
                     <input type="number" id="n_neighbors" name="n_neighbors" min="1" max="100" value="5"><br>
-
                     <label>Weights:</label>
                     <input type="radio" id="knn-uniform" name="knn-weights" value="uniform" checked>
                     <label for="knn-uniform">uniform</label>
@@ -443,11 +503,24 @@
                     <input type="radio" id="randomf-entropy" name="randomf-criterion" value="entropy">
                     <label for="randomf-entropy">entropy</label><br>
 
-                    <label for="n_estimators">Number of Trees:</label>
-                    <input type="number" id="n_estimators" name="n_estimators" min="10" max="1000" step="10" value="100"><br>
+                    <label for="randomf-n_estimators">Number of Trees:</label>
+                    <input type="number" id="randomf-n_estimators" name="randomf-n_estimators" min="10" max="1000" step="10" value="100"><br>
 
                     <label for="randomf-bootstrap">Use Boostrap:</label>
                     <input type="checkbox" id="randomf-bootstrap" name="randomf-bootstrap" checked>
+                </div>
+                <div id="extratree-params" style="display: none">
+                    <label>Criterion:</label>
+                    <input type="radio" id="extratree-gini" name="extratree-criterion" value="gini" checked>
+                    <label for="extratree-gini">gini</label>
+                    <input type="radio" id="extratree-entropy" name="extratree-criterion" value="entropy">
+                    <label for="extratree-entropy">entropy</label><br>
+
+                    <label for="extratree-n_estimators">Number of Trees:</label>
+                    <input type="number" id="extratree-n_estimators" name="extratree-n_estimators" min="10" max="1000" step="10" value="100"><br>
+
+                    <label for="extratree-bootstrap">Use Boostrap:</label>
+                    <input type="checkbox" id="extratree-bootstrap" name="extratree-bootstrap" checked>
                 </div>
                 <div id="svm-params" style="display: none">
                     <div style="width: 50%">
@@ -476,6 +549,8 @@
                     <label for="svm-multiclass-ovr">One Vs Rest</label>
                     <input type="radio" id="svm-multiclass-ovo" name="svm-multiclass" value="OneVsOneClassifier" onclick="load_param_selectors()">
                     <label for="svm-multiclass-ovo">One Vs One</label>
+                    <input type="radio" id="svm-multiclass-out" name="svm-multiclass" value="OutputCodeClassifier" onclick="load_param_selectors()">
+                    <label for="svm-multiclass-out">OutputCode</label>
 
 
                 </div>
@@ -502,9 +577,10 @@
             </label><br>
             <div id="cross_val_repetitions">
                 <label>repetitions:
-                <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
-            </label>
-            </div><br>
+                    <input type="number" name="n_repeats" min="1" max="10" step="1" value="1">
+                </label>
+            </div>
+            <br>
 
             <input type="button" class="btn btn-primary" onclick="classifierAnalysis()" value="Analyse Classifier">
             <input type="button" class="btn btn-primary" onclick="classifierSaving()" value="Save Classifier">

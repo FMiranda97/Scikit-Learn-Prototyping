@@ -229,6 +229,7 @@ def auc_mul_classif_correlation_penalty(X: pd.DataFrame, y: np.ndarray, penalty_
 
 
 def normalize(scores: np.ndarray) -> np.ndarray:
+    scores = np.array([0 if np.isnan(v) else v for v in scores])
     max_value = scores.max()
     min_value = scores.min()
     scores = (scores - min_value) / (max_value - min_value)
@@ -237,9 +238,9 @@ def normalize(scores: np.ndarray) -> np.ndarray:
 
 def multi_stats_classif(X: pd.DataFrame, y: np.ndarray) -> np.ndarray:
     scores_auc = normalize(auc_classif(X, y, aggregate_func=np.prod))
-    scores_ks = normalize(ks_classif(X, y)[0])
+    scores_f = normalize(f_classif(X, y)[0])
     scores_chi2 = normalize(chi2(X, y)[0])
-    return normalize(np.array([x * y * z for x, y, z in zip(scores_auc, scores_ks, scores_chi2)]))
+    return normalize(np.array([x * y * z for x, y, z in zip(scores_auc, scores_f, scores_chi2)]))
 
 
 def multi_stats_classif_correlation_penalty(X: pd.DataFrame, y: np.ndarray, penalty_coefficient: float = 2) -> np.ndarray:
