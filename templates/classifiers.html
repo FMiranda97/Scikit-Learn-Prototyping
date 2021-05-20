@@ -336,7 +336,7 @@
                     let randomfcriterion = $('input[name="randomf-criterion"]:checked').val();
                     let bootstrap = $('#randomf-bootstrap').is(":checked");
                     bootstrap = bootstrap ? "True" : "False";
-                    let n_estimators = $('input[name="n_estimators"]').val();
+                    let n_estimators = $('input[name="randomf-n_estimators"]').val();
                     classifier = `RandomForestClassifier(n_estimators=${n_estimators}, criterion=\'${randomfcriterion}\', bootstrap=${bootstrap})`;
                     break;
                 case "ExtraTreesClassifier":
@@ -465,9 +465,6 @@
 
                 <input class="form-check-input" type="radio" id="bayes" name="method" value="GaussianNB" onclick="load_param_selectors()">
                 <label class="form-check-label" for="bayes">GaussianNB</label><br>
-
-                <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
-                <label class="form-check-label" for="svm">SVC</label><br>
 
                 <input class="form-check-input" type="radio" id="svm" name="method" value="SVC" onclick="load_param_selectors()">
                 <label class="form-check-label" for="svm">SVC</label><br>
