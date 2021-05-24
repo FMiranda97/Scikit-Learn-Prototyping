@@ -75,11 +75,11 @@ def analyse_filters(filter_info, request):
     classes, counts = np.unique(y, return_counts=True)
     y_count = dict(zip(classes, counts))
     post_filter = [
-        {
-            "title": "Pre-filtering",
-            "feat_table": feature_analysis(X, y),
-            "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
-        }
+        # {
+        #     "title": "Pre-filtering",
+        #     "feat_table": feature_analysis(X, y),
+        #     "corr_table": abs(X.corr()).to_html(classes=["table", "heatmap"], float_format="{:.2f}".format)
+        # }
     ]
 
     for i, fil in filter_info.items():

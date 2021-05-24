@@ -98,14 +98,14 @@ def plot_features(X: pd.DataFrame, y: np.ndarray, interactive: bool = True, n_fe
     elif n_features == 4:
         if interactive:
             matplotlib.use('Qt4Agg')
-        markers = ["P", "o", "1", "s", "p", "+", "*", "x", "D", "2", "v", "3", "^", "4", "<", "d", ">", "X", "."]
+        markers = [".", "+", "x", "s", "p", "+", "*", "1", "D", "2", "v", "3", "^", "4", "<", "d", ">", "X", ","]
         markers = markers[0:n_classes]
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         for i, m in enumerate(markers):
             mask = y == i
             # mask is now an array of booleans that can be used for indexing
-            img = ax.scatter(X[mask][X.columns[0]], X[mask][X.columns[1]], X[mask][X.columns[2]], c=X[mask][X.columns[3]], marker=m, cmap=plt.cool())
+            img = ax.scatter(X[mask][X.columns[0]], X[mask][X.columns[1]], X[mask][X.columns[2]], c=X[mask][X.columns[3]], marker=m, cmap='gnuplot2')
 
         handles = [mlines.Line2D([], [], color='black', marker=m, linestyle='None', markersize=10, label='Class %d' % i) for i, m in enumerate(markers)]
         plt.legend(handles=handles, bbox_to_anchor=(-0.05, 1))
